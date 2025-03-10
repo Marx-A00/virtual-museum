@@ -40,7 +40,7 @@ let canJump = false;
 let prevTime = performance.now();
 const velocity = new THREE.Vector3();
 const direction = new THREE.Vector3();
-const speed = 5.0;
+const speed = 40.0;
 
 // Museum layout
 const museumSize = {
@@ -417,18 +417,22 @@ function onKeyDown(event) {
         case 'ArrowUp':
         case 'KeyW':
             moveForward = true;
+            document.getElementById('key-W').classList.add('active');
             break;
         case 'ArrowLeft':
         case 'KeyA':
             moveLeft = true;
+            document.getElementById('key-A').classList.add('active');
             break;
         case 'ArrowDown':
         case 'KeyS':
             moveBackward = true;
+            document.getElementById('key-S').classList.add('active');
             break;
         case 'ArrowRight':
         case 'KeyD':
             moveRight = true;
+            document.getElementById('key-D').classList.add('active');
             break;
     }
 }
@@ -438,18 +442,22 @@ function onKeyUp(event) {
         case 'ArrowUp':
         case 'KeyW':
             moveForward = false;
+            document.getElementById('key-W').classList.remove('active');
             break;
         case 'ArrowLeft':
         case 'KeyA':
             moveLeft = false;
+            document.getElementById('key-A').classList.remove('active');
             break;
         case 'ArrowDown':
         case 'KeyS':
             moveBackward = false;
+            document.getElementById('key-S').classList.remove('active');
             break;
         case 'ArrowRight':
         case 'KeyD':
             moveRight = false;
+            document.getElementById('key-D').classList.remove('active');
             break;
     }
 }
