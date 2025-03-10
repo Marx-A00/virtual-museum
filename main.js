@@ -355,6 +355,12 @@ function setupInteraction() {
     // Check for artwork interaction when the mouse moves
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('click', onMouseClick);
+    
+    // Make sure keyboard controls are registered here
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
+    
+    console.log('All interaction event listeners have been registered');
 }
 
 function onMouseMove(event) {
@@ -413,57 +419,77 @@ function checkCollisions() {
 
 // Keyboard controls
 function onKeyDown(event) {
+    // Add logging only for D key
+    if (event.code === 'KeyD' || event.code === 'ArrowRight') {
+        console.log('D/Right key pressed, code:', event.code);
+    }
+    
     switch (event.code) {
         case 'ArrowUp':
         case 'KeyW':
             moveForward = true;
-            document.getElementById('key-W').classList.add('active');
+            toggleKeyClass('key-W', true);
             break;
         case 'ArrowLeft':
         case 'KeyA':
             moveLeft = true;
-            document.getElementById('key-A').classList.add('active');
+            toggleKeyClass('key-A', true);
             break;
         case 'ArrowDown':
         case 'KeyS':
             moveBackward = true;
-            document.getElementById('key-S').classList.add('active');
+            toggleKeyClass('key-S', true);
             break;
         case 'ArrowRight':
         case 'KeyD':
             moveRight = true;
-            document.getElementById('key-D').classList.add('active');
+            toggleKeyClass('key-D', true);
+            console.log('D key: moveRight set to', moveRight);  // Debug the moveRight value
             break;
     }
 }
 
 function onKeyUp(event) {
+    // Add logging only for D key
+    if (event.code === 'KeyD' || event.code === 'ArrowRight') {
+        console.log('D/Right key released, code:', event.code);
+    }
+    
     switch (event.code) {
         case 'ArrowUp':
         case 'KeyW':
             moveForward = false;
-            document.getElementById('key-W').classList.remove('active');
+            toggleKeyClass('key-W', false);
             break;
         case 'ArrowLeft':
         case 'KeyA':
             moveLeft = false;
-            document.getElementById('key-A').classList.remove('active');
+            toggleKeyClass('key-A', false);
             break;
         case 'ArrowDown':
         case 'KeyS':
             moveBackward = false;
-            document.getElementById('key-S').classList.remove('active');
+            toggleKeyClass('key-S', false);
             break;
         case 'ArrowRight':
         case 'KeyD':
             moveRight = false;
-            document.getElementById('key-D').classList.remove('active');
+            toggleKeyClass('key-D', false);
             break;
     }
 }
 
-document.addEventListener('keydown', onKeyDown);
-document.addEventListener('keyup', onKeyUp);
+// Helper function to safely toggle key classes
+function toggleKeyClass(id, isActive) {
+    const element = document.getElementById(id);
+    if (element) {
+        if (isActive) {
+            element.classList.add('active');
+        } else {
+            element.classList.remove('active');
+        }
+    }
+}
 
 // Lock/unlock controls with click
 const container = document.getElementById('container');
@@ -501,6 +527,15 @@ function animate() {
         const time = performance.now();
         const delta = (time - prevTime) / 1000;
         
+        // Remove the debug logging for production
+        // if (Math.random() < 0.01) {
+        //     console.log('Movement state:', { 
+        //         moveRight, 
+        //         directionX: direction.x,
+        //         velocityX: velocity.x
+        //     });
+        // }
+        
         // Deceleration
         velocity.x -= velocity.x * 10.0 * delta;
         velocity.z -= velocity.z * 10.0 * delta;
@@ -508,13 +543,17 @@ function animate() {
         // Direction based on key presses
         direction.z = Number(moveForward) - Number(moveBackward);
         direction.x = Number(moveRight) - Number(moveLeft);
-        direction.normalize();
         
-        // Movement
+        // Only normalize if we're actually moving
+        if (direction.x !== 0 || direction.z !== 0) {
+            direction.normalize();
+        }
+        
+        // Apply velocity based on direction and speed
         if (moveForward || moveBackward) velocity.z -= direction.z * speed * delta;
         if (moveLeft || moveRight) velocity.x -= direction.x * speed * delta;
         
-        // Apply movement
+        // Move the camera based on velocity
         controls.moveRight(-velocity.x * delta);
         controls.moveForward(-velocity.z * delta);
         
@@ -529,6 +568,17 @@ function animate() {
 
 // Initialize the museum
 function init() {
+    // Check if key elements exist
+    const keyElements = ['key-W', 'key-A', 'key-S', 'key-D'];
+    keyElements.forEach(id => {
+        const element = document.getElementById(id);
+        if (!element) {
+            console.error(`Key element not found: ${id}`);
+        } else {
+            console.log(`Key element found: ${id}`);
+        }
+    });
+    
     createMuseum();
     createArtworks();
     setupInteraction();
