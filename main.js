@@ -233,6 +233,9 @@ function addMuseumFeatures() {
     addBench(5, 0, -5);
     addBench(-5, 0, 5);
     addBench(5, 0, 5);
+
+    // Add a function to create a fancy chandelier
+    addChandelier();
 }
 
 function addBench(x, y, z) {
@@ -528,6 +531,34 @@ function toggleKeyClass(id, isActive) {
     }
 }
 
+// Function to update the speed meter
+function updateSpeedMeter() {
+    // Calculate the current speed from X and Z velocity components
+    const horizontalSpeed = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
+    
+    // Update the numeric value (rounded to 1 decimal place)
+    const speedValueElement = document.getElementById('speed-value');
+    if (speedValueElement) {
+        speedValueElement.textContent = horizontalSpeed.toFixed(1);
+    }
+    
+    // Update the speed bar width as a percentage of max speed
+    const speedBarElement = document.getElementById('speed-bar');
+    if (speedBarElement) {
+        const percentage = Math.min((horizontalSpeed / maxSpeed) * 100, 100);
+        speedBarElement.style.width = `${percentage}%`;
+        
+        // Change color based on speed (green to yellow to red)
+        if (percentage > 80) {
+            speedBarElement.style.background = 'linear-gradient(to right, #fc2, #f44)';
+        } else if (percentage > 50) {
+            speedBarElement.style.background = 'linear-gradient(to right, #4c8, #fc2)';
+        } else {
+            speedBarElement.style.background = 'linear-gradient(to right, #4c8, #8cf)';
+        }
+    }
+}
+
 // Lock/unlock controls with click
 const container = document.getElementById('container');
 const loadingElement = document.getElementById('loading');
@@ -634,6 +665,9 @@ function animate() {
         // Check for collisions after movement
         checkCollisions();
         
+        // Update the speed meter to show current velocity
+        updateSpeedMeter();
+        
         prevTime = time;
     }
     
@@ -663,6 +697,104 @@ function init() {
     }, 2000);
     
     animate();
+}
+
+// Add a function to create a fancy chandelier
+function addChandelier() {
+    // Create main chandelier structure
+    const chandGroup = new THREE.Group();
+    
+    // Center rod
+    const rodGeometry = new THREE.CylinderGeometry(0.05, 0.05, 1.5, 8);
+    const rodMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x8B4513,  // Bronze/copper color
+        metalness: 0.8,
+        roughness: 0.2
+    });
+    const rod = new THREE.Mesh(rodGeometry, rodMaterial);
+    rod.position.y = -0.75;
+    chandGroup.add(rod);
+    
+    // Main body - decorative orb
+    const bodyGeometry = new THREE.SphereGeometry(0.3, 16, 16);
+    const bodyMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xB87333,  // Copper 
+        metalness: 0.9,
+        roughness: 0.1
+    });
+    const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+    chandGroup.add(body);
+    
+    // Ring for lights
+    const ringGeometry = new THREE.TorusGeometry(1.2, 0.08, 16, 32);
+    const ringMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xB87333,  // Copper
+        metalness: 0.9,
+        roughness: 0.1 
+    });
+    const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+    ring.position.y = -0.5;
+    ring.rotation.x = Math.PI / 2;
+    chandGroup.add(ring);
+    
+    // Add decorative chains
+    for (let i = 0; i < 4; i++) {
+        const chainGeometry = new THREE.CylinderGeometry(0.02, 0.02, 1.5, 8);
+        const chain = new THREE.Mesh(chainGeometry, rodMaterial);
+        chain.position.y = -0.75;
+        chain.position.x = Math.sin(i * Math.PI/2) * 0.7;
+        chain.position.z = Math.cos(i * Math.PI/2) * 0.7;
+        // Tilt chains outward slightly
+        chain.rotation.x = Math.sin(i * Math.PI/2) * 0.2;
+        chain.rotation.z = Math.cos(i * Math.PI/2) * 0.2;
+        chandGroup.add(chain);
+    }
+    
+    // Add lights around the ring
+    const numLights = 8;
+    for (let i = 0; i < numLights; i++) {
+        // Create a small bulb geometry
+        const bulbGeometry = new THREE.SphereGeometry(0.12, 8, 8);
+        const bulbMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0xFFFF99,  // Light yellow
+            emissive: 0xFFFF99,
+            emissiveIntensity: 1,
+            metalness: 0.1,
+            roughness: 0.1
+        });
+        const bulb = new THREE.Mesh(bulbGeometry, bulbMaterial);
+        
+        // Position around the ring
+        const angle = (i / numLights) * Math.PI * 2;
+        bulb.position.x = Math.sin(angle) * 1.2;
+        bulb.position.z = Math.cos(angle) * 1.2;
+        bulb.position.y = -0.5;
+        chandGroup.add(bulb);
+        
+        // Add a point light at each bulb
+        const pointLight = new THREE.PointLight(0xFFFF99, 0.5, 5);
+        pointLight.position.copy(bulb.position);
+        chandGroup.add(pointLight);
+    }
+    
+    // Add a central point light for overall illumination
+    const centralLight = new THREE.PointLight(0xFFFFAA, 1, 15);
+    centralLight.position.y = -0.3;
+    chandGroup.add(centralLight);
+    
+    // Position the chandelier in the center of the museum, hanging from the ceiling
+    chandGroup.position.set(0, museumSize.height - 0.5, 0);
+    
+    // Add subtle animation to make the chandelier sway slightly
+    const animateChandelier = () => {
+        const time = Date.now() * 0.001;
+        chandGroup.rotation.x = Math.sin(time * 0.5) * 0.02;
+        chandGroup.rotation.z = Math.sin(time * 0.3) * 0.02;
+        requestAnimationFrame(animateChandelier);
+    };
+    animateChandelier();
+    
+    scene.add(chandGroup);
 }
 
 init();
