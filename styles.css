@@ -104,6 +104,12 @@ canvas {
     transition: all 0.1s ease;
 }
 
+.key.spacebar {
+    width: 120px;
+    margin-top: 5px;
+    font-size: 14px;
+}
+
 .key.active {
     background-color: rgba(100, 100, 255, 0.8);
     border-color: #99f;

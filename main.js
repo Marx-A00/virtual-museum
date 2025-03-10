@@ -36,6 +36,11 @@ let moveBackward = false;
 let moveLeft = false;
 let moveRight = false;
 let canJump = false;
+let playerHeight = 1.8; // Typical height for a first-person camera
+
+// Physics parameters for jumping
+const gravity = 20.0; // Strength of gravity
+let onGround = true;  // Tracks if player is on the ground
 
 let prevTime = performance.now();
 const velocity = new THREE.Vector3();
@@ -420,6 +425,22 @@ function checkCollisions() {
     if (camera.position.x > museumSize.width / 2 - 0.5) camera.position.x = museumSize.width / 2 - 0.5;
     if (camera.position.z < -museumSize.depth / 2 + 0.5) camera.position.z = -museumSize.depth / 2 + 0.5;
     if (camera.position.z > museumSize.depth / 2 - 0.5) camera.position.z = museumSize.depth / 2 - 0.5;
+    
+    // Floor collision (for jumping)
+    if (camera.position.y < playerHeight) {
+        camera.position.y = playerHeight;
+        velocity.y = 0;
+        canJump = true;
+        onGround = true;
+    } else {
+        onGround = false;
+    }
+    
+    // Ceiling collision
+    if (camera.position.y > museumSize.height - 0.5) {
+        camera.position.y = museumSize.height - 0.5;
+        velocity.y = 0;
+    }
 }
 
 // Keyboard controls
@@ -451,6 +472,14 @@ function onKeyDown(event) {
             toggleKeyClass('key-D', true);
             console.log('D key: moveRight set to', moveRight);  // Debug the moveRight value
             break;
+        case 'Space':
+            if (canJump === true) {
+                velocity.y = 10; // Initial jump velocity
+                console.log('Jump initiated');
+            }
+            canJump = false;
+            toggleKeyClass('key-Space', true);
+            break;
     }
 }
 
@@ -480,6 +509,9 @@ function onKeyUp(event) {
         case 'KeyD':
             moveRight = false;
             toggleKeyClass('key-D', false);
+            break;
+        case 'Space':
+            toggleKeyClass('key-Space', false);
             break;
     }
 }
@@ -541,6 +573,9 @@ function animate() {
             direction.normalize();
         }
         
+        // Apply gravity to vertical velocity
+        velocity.y -= gravity * delta;
+        
         // Apply acceleration or deceleration for X axis (left/right)
         if (moveLeft || moveRight) {
             // Smooth acceleration when keys are pressed
@@ -592,6 +627,9 @@ function animate() {
         // Move the camera based on velocity
         controls.moveRight(-velocity.x * delta);
         controls.moveForward(-velocity.z * delta);
+        
+        // Apply vertical movement (jumping/falling)
+        camera.position.y += velocity.y * delta;
         
         // Check for collisions after movement
         checkCollisions();
