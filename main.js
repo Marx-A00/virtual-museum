@@ -40,7 +40,12 @@ let canJump = false;
 let prevTime = performance.now();
 const velocity = new THREE.Vector3();
 const direction = new THREE.Vector3();
-const speed = 40.0;
+const speed = 10.0;
+
+// Acceleration and deceleration parameters - adjusted for smoother movement
+const acceleration = 5.0;   // Reduced from 15.0 for more gradual acceleration
+const deceleration = 3.0;   // Reduced from 8.0 for smoother stopping
+const maxSpeed = 12.0;      // Slightly reduced max speed
 
 // Museum layout
 const museumSize = {
@@ -527,19 +532,6 @@ function animate() {
         const time = performance.now();
         const delta = (time - prevTime) / 1000;
         
-        // Remove the debug logging for production
-        // if (Math.random() < 0.01) {
-        //     console.log('Movement state:', { 
-        //         moveRight, 
-        //         directionX: direction.x,
-        //         velocityX: velocity.x
-        //     });
-        // }
-        
-        // Deceleration
-        velocity.x -= velocity.x * 10.0 * delta;
-        velocity.z -= velocity.z * 10.0 * delta;
-        
         // Direction based on key presses
         direction.z = Number(moveForward) - Number(moveBackward);
         direction.x = Number(moveRight) - Number(moveLeft);
@@ -549,9 +541,53 @@ function animate() {
             direction.normalize();
         }
         
-        // Apply velocity based on direction and speed
-        if (moveForward || moveBackward) velocity.z -= direction.z * speed * delta;
-        if (moveLeft || moveRight) velocity.x -= direction.x * speed * delta;
+        // Apply acceleration or deceleration for X axis (left/right)
+        if (moveLeft || moveRight) {
+            // Smooth acceleration when keys are pressed
+            // This creates a more gradual ramp-up effect
+            const currentSpeed = Math.abs(velocity.x);
+            const accelerationFactor = 1 - (currentSpeed / maxSpeed); // Slows acceleration as we approach max speed
+            
+            velocity.x -= direction.x * acceleration * accelerationFactor * delta;
+            
+            // Limit to max speed - with a softer cap
+            if (Math.abs(velocity.x) > maxSpeed) {
+                // Gradually bring speed down to max rather than hard capping
+                velocity.x = Math.sign(velocity.x) * (maxSpeed + (Math.abs(velocity.x) - maxSpeed) * 0.9);
+            }
+        } else {
+            // Smooth deceleration when keys are released
+            // Use a quadratic falloff for more natural deceleration
+            if (Math.abs(velocity.x) > 0.005) { // Lower threshold for smoother stop
+                const decelerationStrength = Math.min(deceleration, Math.abs(velocity.x) * 5);
+                velocity.x -= velocity.x * decelerationStrength * delta;
+            } else {
+                velocity.x = 0; // Complete stop below threshold
+            }
+        }
+        
+        // Apply acceleration or deceleration for Z axis (forward/backward)
+        if (moveForward || moveBackward) {
+            // Smooth acceleration when keys are pressed
+            const currentSpeed = Math.abs(velocity.z);
+            const accelerationFactor = 1 - (currentSpeed / maxSpeed); // Slows acceleration as we approach max speed
+            
+            velocity.z -= direction.z * acceleration * accelerationFactor * delta;
+            
+            // Limit to max speed - with a softer cap
+            if (Math.abs(velocity.z) > maxSpeed) {
+                // Gradually bring speed down to max rather than hard capping
+                velocity.z = Math.sign(velocity.z) * (maxSpeed + (Math.abs(velocity.z) - maxSpeed) * 0.9);
+            }
+        } else {
+            // Smooth deceleration when keys are released
+            if (Math.abs(velocity.z) > 0.005) { // Lower threshold for smoother stop
+                const decelerationStrength = Math.min(deceleration, Math.abs(velocity.z) * 5);
+                velocity.z -= velocity.z * decelerationStrength * delta;
+            } else {
+                velocity.z = 0; // Complete stop below threshold
+            }
+        }
         
         // Move the camera based on velocity
         controls.moveRight(-velocity.x * delta);
