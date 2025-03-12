@@ -130,6 +130,16 @@ const artworks = [
         position: { x: 0, y: 2.5, z: 14.9 },
         rotation: { y: Math.PI },
         size: { width: 6, height: 4 }
+    },
+    {
+        title: "Fine Wind, Clear Morning",
+        artist: "Hokusai",
+        year: 1830,
+        description: "Also known as 'Red Fuji', this is one of Hokusai's most famous woodblock prints from the series 'Thirty-six Views of Mount Fuji', depicting the mountain on a clear morning with a gentle wind.",
+        image: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Red_Fuji_southern_wind_clear_morning.jpg/1200px-Red_Fuji_southern_wind_clear_morning.jpg",
+        position: { x: 14.9, y: 2.5, z: 10 },
+        rotation: { y: -Math.PI / 2 },
+        size: { width: 4, height: 3 }
     }
 ];
 
