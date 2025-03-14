@@ -1,61 +1,54 @@
-# Virtual Museum
+# Virtual Museum - Vite Edition
 
-An interactive 3D virtual museum where users can walk around and view artwork, similar to a real museum experience.
+A virtual 3D museum experience built with Three.js and Vite.
 
 ## Features
 
-- First-person navigation through a virtual museum space
-- View famous artwork displays with information
-- Interactive elements that provide details about each artwork
-- Realistic 3D environment with proper lighting and shadows
+- 3D environment with artwork displays
+- First-person navigation with WASD/arrow keys
+- Jumping with the spacebar
+- Movement visualization and speed indicator
+- Smooth acceleration and deceleration
+- Interactive artwork information display
 
-## How to Use
+## Development Setup
 
-1. Open the `index.html` file in a web browser (Chrome or Firefox recommended for best performance)
-2. Click anywhere on the screen to start the interactive experience
-3. Use the following controls to navigate:
-   - **W / Arrow Up**: Move forward
-   - **S / Arrow Down**: Move backward
-   - **A / Arrow Left**: Move left
-   - **D / Arrow Right**: Move right
-   - **Mouse**: Look around
-   - **ESC**: Release mouse control
-4. Click on artworks to view information about them
-
-## Technical Details
-
-This project is built using:
-- Three.js for 3D rendering
-- Pointer Lock controls for first-person navigation
-- Responsive design that works on most modern browsers
-
-## Setup
-
-No build process is required. Simply clone this repository and open `index.html` in a browser. 
-
-You can also serve it using a simple HTTP server for better performance:
+1. **Install dependencies**
 
 ```bash
-# Using Python
-python -m http.server
-
-# Using Node.js
-npx serve
+npm install
 ```
 
-Then navigate to `http://localhost:8000` (Python) or `http://localhost:3000` (Node).
+2. **Start the development server**
 
-## Running Online
+```bash
+npm run dev
+```
 
-You can access a live version of this virtual museum at: https://marx-a00.github.io/virtual-museum/
+3. **Build for production**
 
-## Future Enhancements
+```bash
+npm run build
+```
 
-- Add more artworks and museum sections
-- Implement audio guides
-- Add more interactive elements and animations
-- Support for VR devices
+4. **Preview the production build**
 
-## Credits
+```bash
+npm run preview
+```
 
-The artwork images used in this project are in the public domain or used under appropriate licenses. Original artwork credit belongs to the respective artists.
+## Controls
+
+- **W/Up Arrow**: Move forward
+- **S/Down Arrow**: Move backward
+- **A/Left Arrow**: Move left
+- **D/Right Arrow**: Move right
+- **Space**: Jump
+- **Mouse**: Look around
+- **ESC**: Release mouse control
+
+## Technologies Used
+
+- Three.js - 3D graphics library
+- Vite - Fast modern build tool
+- Vanilla JavaScript - Core programming 

@@ -1,45 +1,37 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Virtual Museum</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
+  </head>
+  <body>
     <div id="container">
-        <div id="info">
-            <h1>Virtual Museum</h1>
-            <p>Use W, A, S, D keys or arrow keys to move. Press SPACE to jump. Look around with the mouse.</p>
-            <p>Press ESC to release mouse control.</p>
+      <div id="info">
+        <h1>Virtual Museum</h1>
+        <p>Use W, A, S, D keys or arrow keys to move. Press SPACE to jump. Look around with the mouse.</p>
+        <p>Press ESC to release mouse control.</p>
+      </div>
+      <div id="loading">Loading...</div>
+      
+      <div id="key-display">
+        <div id="speed-meter">
+          <div id="speed-label">SPEED</div>
+          <div id="speed-value">0</div>
+          <div id="speed-bar-container">
+            <div id="speed-bar"></div>
+          </div>
         </div>
-        <div id="loading">Loading...</div>
-        
-        <div id="key-display">
-            <div id="speed-meter">
-                <div id="speed-label">SPEED</div>
-                <div id="speed-value">0</div>
-                <div id="speed-bar-container">
-                    <div id="speed-bar"></div>
-                </div>
-            </div>
-            <div class="key" id="key-W">W</div>
-            <div class="key-row">
-                <div class="key" id="key-A">A</div>
-                <div class="key" id="key-S">S</div>
-                <div class="key" id="key-D">D</div>
-            </div>
-            <div class="key spacebar" id="key-Space">JUMP</div>
+        <div class="key" id="key-W">W</div>
+        <div class="key-row">
+          <div class="key" id="key-A">A</div>
+          <div class="key" id="key-S">S</div>
+          <div class="key" id="key-D">D</div>
         </div>
+        <div class="key spacebar" id="key-Space">JUMP</div>
+      </div>
     </div>
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-            }
-        }
-    </script>
-    <script type="module" src="main.js"></script>
-</body>
+    <script type="module" src="/src/main.js"></script>
+  </body>
 </html>
