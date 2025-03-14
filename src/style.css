@@ -1,0 +1,161 @@
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    background-color: #000;
+    color: #fff;
+}
+
+#container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+#info {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 15px;
+    border-radius: 5px;
+    z-index: 10;
+    max-width: 350px;
+    transition: opacity 0.5s;
+}
+
+#info h1 {
+    margin-top: 0;
+    font-size: 24px;
+}
+
+#loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 24px;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    border-radius: 5px;
+    z-index: 100;
+}
+
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.artwork-info {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 15px;
+    border-radius: 5px;
+    z-index: 10;
+    text-align: center;
+    max-width: 500px;
+    transition: opacity 0.5s;
+    opacity: 0;
+}
+
+.artwork-info.visible {
+    opacity: 1;
+}
+
+/* WASD Key Display */
+#key-display {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 10;
+}
+
+/* Speed Meter Styling */
+#speed-meter {
+    margin-bottom: 10px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 2px solid #555;
+    border-radius: 6px;
+    padding: 8px;
+    width: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#speed-label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #ddd;
+    margin-bottom: 5px;
+}
+
+#speed-value {
+    font-size: 22px;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+#speed-bar-container {
+    width: 100%;
+    height: 8px;
+    background-color: rgba(50, 50, 50, 0.5);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+#speed-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(to right, #4c8, #fc2);
+    border-radius: 4px;
+    transition: width 0.1s ease-out;
+}
+
+.key-row {
+    display: flex;
+}
+
+.key {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 2px solid #555;
+    border-radius: 6px;
+    margin: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    user-select: none;
+    transition: all 0.1s ease;
+}
+
+.key.spacebar {
+    width: 120px;
+    margin-top: 5px;
+    font-size: 14px;
+}
+
+.key.active {
+    background-color: rgba(100, 100, 255, 0.8);
+    border-color: #99f;
+    transform: scale(0.95);
+    box-shadow: 0 0 8px #99f;
+}
