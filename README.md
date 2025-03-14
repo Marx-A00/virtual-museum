@@ -21,7 +21,7 @@ The museum now includes several visual effects options that can be toggled on/of
 - **Cel-Shading:** Toggle with "C" key - Creates a black-and-white architectural rendering style
 - **Outlines:** Toggle with "O" key - Adds bold black outlines to objects in the scene
 - **Noise Filter:** Toggle with "N" key - Applies a stippled/noise shading effect for added texture
-- **Anaglyph 3D:** Toggle with "A" key - Creates a red-blue stereoscopic effect for visual depth
+- **Anaglyph 3D:** Toggle with "T" key - Creates a red-blue stereoscopic effect for visual depth
 
 These effects can be used in combination (although anaglyph mode has some limitations with other effects).
 
@@ -65,7 +65,7 @@ npm run preview
 - **C**: Toggle cel-shading effect
 - **O**: Toggle outline effect
 - **N**: Toggle noise/stipple effect
-- **A**: Toggle anaglyph 3D effect
+- **T**: Toggle anaglyph 3D effect
 
 ## Testing
 
@@ -91,7 +91,3 @@ npm test
 - Custom Shaders - For stippled rendering
 - Vite - Fast modern build tool
 - Vanilla JavaScript - Core programming 
-
-## How to Access the Cel-Shaded Museum
-
-Open `cel-shader-museum.html` in your browser to view the cel-shaded architectural rendering. 

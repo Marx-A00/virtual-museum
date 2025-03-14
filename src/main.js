@@ -627,7 +627,7 @@ function onKeyDown(event) {
             noisePass.enabled = !noisePass.enabled;
             updateEffectControls();
             break;
-        case 'KeyA': // Anaglyph 3D
+        case 'KeyT': // Anaglyph 3D (changed from KeyA to KeyT)
             anaglyphEnabled = !anaglyphEnabled;
             updateEffectControls();
             break;
@@ -1036,7 +1036,7 @@ function createEffectControls() {
         <p style="margin:5px 0;"><strong>C</strong> - Cel Shading: <span id="cel-status">OFF</span></p>
         <p style="margin:5px 0;"><strong>O</strong> - Outlines: <span id="outline-status">ON</span></p>
         <p style="margin:5px 0;"><strong>N</strong> - Noise Filter: <span id="noise-status">ON</span></p>
-        <p style="margin:5px 0;"><strong>A</strong> - Anaglyph 3D: <span id="anaglyph-status">OFF</span></p>
+        <p style="margin:5px 0;"><strong>T</strong> - Anaglyph 3D: <span id="anaglyph-status">OFF</span></p>
     `;
 }
 

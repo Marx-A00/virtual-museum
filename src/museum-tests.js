@@ -146,7 +146,7 @@ describe('Virtual Museum Cel-Shading Features', () => {
         global.anaglyphEnabled = false;
         global.updateEffectControls = jest.fn();
         
-        // Mock toggle function
+        // Mock toggle function - should handle pressing the 'T' key now
         function toggleAnaglyphEffect() {
             global.anaglyphEnabled = !global.anaglyphEnabled;
             global.updateEffectControls();
