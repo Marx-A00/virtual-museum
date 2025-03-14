@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cel-Shaded Architectural Museum</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+        
+        canvas {
+            display: block;
+        }
+        
+        #info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 350px;
+            color: white;
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        <h2>Cel-Shaded Architectural Museum</h2>
+        <p>A THREE.js scene with cel-shading, bold outlines, stippled texturing, and anaglyph 3D effect.</p>
+        <p>Inspired by architectural rendering styles.</p>
+    </div>
+    
+    <div id="controls">
+        <p><strong>T</strong> - Toggle anaglyph 3D effect</p>
+        <p><strong>O</strong> - Toggle outline effect</p>
+    </div>
+    
+    <script type="module" src="./src/cel-shader-museum.js"></script>
+</body>
+</html> 

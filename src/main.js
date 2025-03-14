@@ -1,6 +1,12 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+// Import effect libraries for cel-shading
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { OutlinePass } from 'three/examples/jsm/postprocessing/OutlinePass.js';
+import { AnaglyphEffect } from 'three/examples/jsm/effects/AnaglyphEffect.js';
 import './style.css';
 
 // Scene setup
@@ -14,6 +20,63 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.getElementById('container').appendChild(renderer.domElement);
+
+// Post-processing and effects
+let composer, outlinePass;
+let anaglyphEffect, anaglyphEnabled = false;
+let outlineEnabled = true;
+let celShadingEnabled = false; // Initially disabled
+let noisePass;
+
+// Array to store selected objects for outlining
+const selectedObjects = [];
+
+// Custom noise shader for stippled shading
+const noiseShader = {
+    uniforms: {
+        "tDiffuse": { value: null },
+        "amount": { value: 0.15 },
+        "scale": { value: 4.0 }
+    },
+    vertexShader: `
+        varying vec2 vUv;
+        void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    `,
+    fragmentShader: `
+        uniform sampler2D tDiffuse;
+        uniform float amount;
+        uniform float scale;
+        varying vec2 vUv;
+
+        // Pseudo-random function
+        float random(vec2 st) {
+            return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
+        }
+
+        void main() {
+            vec4 color = texture2D(tDiffuse, vUv);
+            
+            // Calculate luminance
+            float luminance = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+            
+            // Generate noise pattern
+            vec2 scaledUv = vUv * scale;
+            float noise = random(scaledUv);
+            
+            // Apply stippling effect based on luminance
+            float stipple = step(noise, luminance);
+            
+            // Mix between stippled and solid black based on luminance
+            vec3 stippleColor = mix(vec3(0.0), vec3(1.0), stipple);
+            
+            // Mix between original and stippled based on amount
+            gl_FragColor = vec4(mix(color.rgb, stippleColor, amount), color.a);
+        }
+    `
+};
 
 // Lights
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -146,73 +209,127 @@ const artworks = [
 
 // Create museum structure
 function createMuseum() {
-    // Floor
-    const floorGeometry = new THREE.PlaneGeometry(museumSize.width, museumSize.depth);
-    const floorMaterial = new THREE.MeshStandardMaterial({ 
+    const textureLoader = new THREE.TextureLoader();
+    // Load toon gradient texture for cel-shading
+    const gradientMap = textureLoader.load('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAABCAYAAAD5PA/NAAAAFklEQVQIHWP4z8DwnyGKgYFBiYGBAQBnKgIJhXZpjAAAAABJRU5ErkJggg==');
+    gradientMap.minFilter = THREE.NearestFilter;
+    gradientMap.magFilter = THREE.NearestFilter;
+
+    // Create materials (both standard and cel-shaded)
+    const standardFloorMaterial = new THREE.MeshStandardMaterial({ 
         color: 0xf0f0f0, 
         roughness: 0.1,
         metalness: 0.1
     });
-    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    
+    const standardWallMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xf5f5f5,
+        roughness: 0.2
+    });
+    
+    const standardCeilingMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0xffffff 
+    });
+    
+    const celShadedFloorMaterial = new THREE.MeshToonMaterial({ 
+        color: 0xf0f0f0,
+        gradientMap: gradientMap
+    });
+    
+    const celShadedWallMaterial = new THREE.MeshToonMaterial({ 
+        color: 0xf5f5f5,
+        gradientMap: gradientMap
+    });
+    
+    const celShadedCeilingMaterial = new THREE.MeshToonMaterial({ 
+        color: 0xffffff,
+        gradientMap: gradientMap,
+        wireframe: false // Can be toggled to true for sketch-like appearance
+    });
+
+    // Store both materials on each object so we can toggle
+    const materialSet = {
+        standard: {
+            floor: standardFloorMaterial,
+            wall: standardWallMaterial,
+            ceiling: standardCeilingMaterial
+        },
+        celShaded: {
+            floor: celShadedFloorMaterial,
+            wall: celShadedWallMaterial,
+            ceiling: celShadedCeilingMaterial
+        }
+    };
+
+    // Floor
+    const floorGeometry = new THREE.PlaneGeometry(museumSize.width, museumSize.depth);
+    const floor = new THREE.Mesh(floorGeometry, standardFloorMaterial);
+    floor.userData = { materials: { standard: standardFloorMaterial, celShaded: celShadedFloorMaterial } };
     floor.rotation.x = -Math.PI / 2;
     floor.position.y = 0;
     floor.receiveShadow = true;
     scene.add(floor);
+    selectedObjects.push(floor);
 
     // Ceiling
     const ceilingGeometry = new THREE.PlaneGeometry(museumSize.width, museumSize.depth);
-    const ceilingMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
-    const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
+    const ceiling = new THREE.Mesh(ceilingGeometry, standardCeilingMaterial);
+    ceiling.userData = { materials: { standard: standardCeilingMaterial, celShaded: celShadedCeilingMaterial } };
     ceiling.rotation.x = Math.PI / 2;
     ceiling.position.y = museumSize.height;
     scene.add(ceiling);
+    selectedObjects.push(ceiling);
 
     // Walls
-    const wallMaterial = new THREE.MeshStandardMaterial({ 
-        color: 0xf5f5f5,
-        roughness: 0.2
-    });
-
+    
     // North wall
     const northWallGeometry = new THREE.PlaneGeometry(museumSize.width, museumSize.height);
-    const northWall = new THREE.Mesh(northWallGeometry, wallMaterial);
+    const northWall = new THREE.Mesh(northWallGeometry, standardWallMaterial);
+    northWall.userData = { materials: { standard: standardWallMaterial, celShaded: celShadedWallMaterial } };
     northWall.position.z = -museumSize.depth / 2;
     northWall.position.y = museumSize.height / 2;
     northWall.receiveShadow = true;
     scene.add(northWall);
+    selectedObjects.push(northWall);
 
     // South wall
     const southWallGeometry = new THREE.PlaneGeometry(museumSize.width, museumSize.height);
-    const southWall = new THREE.Mesh(southWallGeometry, wallMaterial);
+    const southWall = new THREE.Mesh(southWallGeometry, standardWallMaterial);
+    southWall.userData = { materials: { standard: standardWallMaterial, celShaded: celShadedWallMaterial } };
     southWall.position.z = museumSize.depth / 2;
     southWall.position.y = museumSize.height / 2;
     southWall.rotation.y = Math.PI;
     southWall.receiveShadow = true;
     scene.add(southWall);
+    selectedObjects.push(southWall);
 
     // East wall
     const eastWallGeometry = new THREE.PlaneGeometry(museumSize.depth, museumSize.height);
-    const eastWall = new THREE.Mesh(eastWallGeometry, wallMaterial);
+    const eastWall = new THREE.Mesh(eastWallGeometry, standardWallMaterial);
+    eastWall.userData = { materials: { standard: standardWallMaterial, celShaded: celShadedWallMaterial } };
     eastWall.position.x = museumSize.width / 2;
     eastWall.position.y = museumSize.height / 2;
     eastWall.rotation.y = -Math.PI / 2;
     eastWall.receiveShadow = true;
     scene.add(eastWall);
+    selectedObjects.push(eastWall);
 
     // West wall
     const westWallGeometry = new THREE.PlaneGeometry(museumSize.depth, museumSize.height);
-    const westWall = new THREE.Mesh(westWallGeometry, wallMaterial);
+    const westWall = new THREE.Mesh(westWallGeometry, standardWallMaterial);
+    westWall.userData = { materials: { standard: standardWallMaterial, celShaded: celShadedWallMaterial } };
     westWall.position.x = -museumSize.width / 2;
     westWall.position.y = museumSize.height / 2;
     westWall.rotation.y = Math.PI / 2;
     westWall.receiveShadow = true;
     scene.add(westWall);
+    selectedObjects.push(westWall);
 
     // Add central columns or features
-    addMuseumFeatures();
+    addMuseumFeatures(materialSet);
 }
 
-function addMuseumFeatures() {
+function addMuseumFeatures(materialSet) {
     // Central feature - could be a sculpture base or information desk
     const pedestalGeometry = new THREE.BoxGeometry(4, 1, 4);
     const pedestalMaterial = new THREE.MeshStandardMaterial({ 
@@ -225,6 +342,7 @@ function addMuseumFeatures() {
     pedestal.castShadow = true;
     pedestal.receiveShadow = true;
     scene.add(pedestal);
+    selectedObjects.push(pedestal);
 
     // Add a simple sculpture on top of the pedestal
     const sculptureGeometry = new THREE.TorusKnotGeometry(1, 0.3, 100, 16);
@@ -238,18 +356,19 @@ function addMuseumFeatures() {
     sculpture.castShadow = true;
     sculpture.scale.set(0.7, 0.7, 0.7);
     scene.add(sculpture);
+    selectedObjects.push(sculpture);
 
     // Add some benches
-    addBench(-5, 0, -5);
-    addBench(5, 0, -5);
-    addBench(-5, 0, 5);
-    addBench(5, 0, 5);
+    addBench(-5, 0, -5, materialSet);
+    addBench(5, 0, -5, materialSet);
+    addBench(-5, 0, 5, materialSet);
+    addBench(5, 0, 5, materialSet);
 
     // Add a function to create a fancy chandelier
-    addChandelier();
+    addChandelier(materialSet);
 }
 
-function addBench(x, y, z) {
+function addBench(x, y, z, materialSet) {
     const benchGroup = new THREE.Group();
     
     // Bench top
@@ -286,6 +405,7 @@ function addBench(x, y, z) {
     benchGroup.position.set(x, y, z);
     
     scene.add(benchGroup);
+    selectedObjects.push(benchGroup);
 }
 
 // Create and add artwork to the museum
@@ -494,6 +614,23 @@ function onKeyDown(event) {
             canJump = false;
             toggleKeyClass('key-Space', true);
             break;
+        // NEW: Visual effect toggles
+        case 'KeyC': // Cel-shading
+            toggleCelShading();
+            break;
+        case 'KeyO': // Outline
+            outlineEnabled = !outlineEnabled;
+            outlinePass.enabled = outlineEnabled;
+            updateEffectControls();
+            break;
+        case 'KeyN': // Noise/stipple effect
+            noisePass.enabled = !noisePass.enabled;
+            updateEffectControls();
+            break;
+        case 'KeyA': // Anaglyph 3D
+            anaglyphEnabled = !anaglyphEnabled;
+            updateEffectControls();
+            break;
     }
 }
 
@@ -682,7 +819,21 @@ function animate() {
         prevTime = time;
     }
     
-    renderer.render(scene, camera);
+    // Apply selected objects to outline pass when enabled
+    if (outlineEnabled) {
+        outlinePass.selectedObjects = selectedObjects;
+    }
+    
+    // Render the scene
+    if (anaglyphEnabled) {
+        anaglyphEffect.render(scene, camera);
+    } else {
+        if (composer) {
+            composer.render();
+        } else {
+            renderer.render(scene, camera);
+        }
+    }
 }
 
 // Initialize the museum
@@ -702,6 +853,25 @@ function init() {
     createArtworks();
     setupInteraction();
     
+    // Set up post-processing and effects
+    setupPostProcessing();
+    setupAnaglyphEffect();
+    createEffectControls();
+    updateEffectControls();
+    
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        composer.setSize(window.innerWidth, window.innerHeight);
+        
+        if (anaglyphEffect) {
+            anaglyphEffect.setSize(window.innerWidth, window.innerHeight);
+        }
+    });
+    
     // Hide loading indicator
     setTimeout(() => {
         loadingElement.classList.add('hidden');
@@ -711,7 +881,7 @@ function init() {
 }
 
 // Add a function to create a fancy chandelier
-function addChandelier() {
+function addChandelier(materialSet) {
     // Create main chandelier structure
     const chandGroup = new THREE.Group();
     
@@ -806,6 +976,111 @@ function addChandelier() {
     animateChandelier();
     
     scene.add(chandGroup);
+    selectedObjects.push(chandGroup);
+}
+
+// Set up post-processing effects
+function setupPostProcessing() {
+    // Create effect composer
+    composer = new EffectComposer(renderer);
+    
+    // Add render pass
+    const renderPass = new RenderPass(scene, camera);
+    composer.addPass(renderPass);
+    
+    // Create outline pass
+    outlinePass = new OutlinePass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        scene, camera
+    );
+    outlinePass.edgeStrength = 3.0;
+    outlinePass.edgeGlow = 0.0;
+    outlinePass.edgeThickness = 1.0;
+    outlinePass.pulsePeriod = 0;
+    outlinePass.visibleEdgeColor.set('#000000');
+    outlinePass.hiddenEdgeColor.set('#000000');
+    composer.addPass(outlinePass);
+
+    // Add noise/stipple pass
+    noisePass = new ShaderPass(noiseShader);
+    composer.addPass(noisePass);
+}
+
+// Set up anaglyph effect
+function setupAnaglyphEffect() {
+    anaglyphEffect = new AnaglyphEffect(renderer);
+    anaglyphEffect.setSize(window.innerWidth, window.innerHeight);
+}
+
+// Create status indicators for effects
+function createEffectControls() {
+    // Create status container if it doesn't exist
+    let statusContainer = document.getElementById('effect-controls');
+    if (!statusContainer) {
+        statusContainer = document.createElement('div');
+        statusContainer.id = 'effect-controls';
+        statusContainer.style.position = 'absolute';
+        statusContainer.style.top = '100px';
+        statusContainer.style.right = '20px';
+        statusContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        statusContainer.style.padding = '15px';
+        statusContainer.style.borderRadius = '5px';
+        statusContainer.style.zIndex = '10';
+        statusContainer.style.color = 'white';
+        document.body.appendChild(statusContainer);
+    }
+
+    statusContainer.innerHTML = `
+        <h3 style="margin-top:0;">Visual Effects</h3>
+        <p style="margin:5px 0;">Toggle effects with keyboard:</p>
+        <p style="margin:5px 0;"><strong>C</strong> - Cel Shading: <span id="cel-status">OFF</span></p>
+        <p style="margin:5px 0;"><strong>O</strong> - Outlines: <span id="outline-status">ON</span></p>
+        <p style="margin:5px 0;"><strong>N</strong> - Noise Filter: <span id="noise-status">ON</span></p>
+        <p style="margin:5px 0;"><strong>A</strong> - Anaglyph 3D: <span id="anaglyph-status">OFF</span></p>
+    `;
+}
+
+// Update status indicators
+function updateEffectControls() {
+    const celStatus = document.getElementById('cel-status');
+    if (celStatus) {
+        celStatus.textContent = celShadingEnabled ? 'ON' : 'OFF';
+        celStatus.style.color = celShadingEnabled ? '#8f8' : '#f88';
+    }
+    
+    const outlineStatus = document.getElementById('outline-status');
+    if (outlineStatus) {
+        outlineStatus.textContent = outlineEnabled ? 'ON' : 'OFF';
+        outlineStatus.style.color = outlineEnabled ? '#8f8' : '#f88';
+    }
+    
+    const noiseStatus = document.getElementById('noise-status');
+    if (noiseStatus) {
+        noiseStatus.textContent = noisePass.enabled ? 'ON' : 'OFF';
+        noiseStatus.style.color = noisePass.enabled ? '#8f8' : '#f88';
+    }
+    
+    const anaglyphStatus = document.getElementById('anaglyph-status');
+    if (anaglyphStatus) {
+        anaglyphStatus.textContent = anaglyphEnabled ? 'ON' : 'OFF';
+        anaglyphStatus.style.color = anaglyphEnabled ? '#8f8' : '#f88';
+    }
+}
+
+// Toggle cel-shading for all objects in the scene
+function toggleCelShading() {
+    celShadingEnabled = !celShadingEnabled;
+    
+    // Apply to all objects with material userData
+    scene.traverse(object => {
+        if (object.isMesh && object.userData.materials) {
+            object.material = celShadingEnabled 
+                ? object.userData.materials.celShaded 
+                : object.userData.materials.standard;
+        }
+    });
+    
+    updateEffectControls();
 }
 
 init();
